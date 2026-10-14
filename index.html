@@ -179,6 +179,11 @@ body.task-v4:not(.signed-out) .topline{margin-bottom:18px}
 .task-v4 .member-priorities .important{color:#e9a4b5;background:#9e1e2e20}
 .task-v4 .member-next{font-size:10px;color:#a498ae;line-height:1.7;overflow-wrap:anywhere}
 .task-v4 .member .member-status{font-size:10px;color:#998c9f}
+.task-v4 .member-job-label{flex:0 0 145px;gap:5px;font-size:10px;color:#9f91a7}
+.task-v4 .member-job-label select{padding:8px 10px;font-size:12px;background:#131115;border-color:#ffffff17}
+.task-v4 .member-job-state{font-size:9px;color:#8f8298}
+.task-v4 #membersPanel>.section-head p{margin:6px 0 0}
+@media(max-width:900px){.task-v4 .access-member{flex-wrap:wrap}.task-v4 .member-job-label{flex:1 0 145px}.task-v4 .access-member .member-name{min-width:100px}}
 @media(max-width:1150px){.task-v4 #taskPanel>.section-head{align-items:flex-start;gap:14px}.task-v4 .task-toolbar{flex-wrap:wrap}}
 @media(max-width:900px){
  .task-v4 .table-wrap table{min-width:0}
@@ -227,7 +232,7 @@ body.task-v4:not(.signed-out) .topline{margin-bottom:18px}
 <div id="employeeView" hidden aria-hidden="true"><div id="employeeStats"></div><div id="legacyReportHooks" hidden><input id="reportDate" type="date"><button id="fillFromTasks"></button><button id="importReport"></button><button id="downloadTemplate"></button><button id="reloadReport"></button><form id="reportForm"><textarea name="done"></textarea><textarea name="ongoing"></textarea><textarea name="planned"></textarea><textarea name="delivery"></textarea><textarea name="rush"></textarea><textarea name="blockers"></textarea><span id="reportSaveState"></span><input type="checkbox" id="autoSaveReport"><button id="submitReport"></button></form><div id="deliverySummary"></div><div id="myReportPreview"></div></div></div>
 <div id="adminView" hidden><div class="stats" id="adminStats"></div><section class="panel" id="teamPanel"><div class="section-head"><h2>成员概览</h2><span class="muted">当前任务 · 按 S / A / B 级统计</span></div><div class="team-grid" id="teamGrid"></div></section><section class="panel" id="reportsPanel"><div class="section-head"><div><h2>历史工作记录</h2><div class="muted" id="reportCount"></div></div><label style="flex-direction:row;align-items:center">查看日期<input type="date" id="adminDate" style="width:155px;padding:9px"></label></div><div class="report-list" id="reportList"></div></section></div>
 <section class="panel" id="taskPanel"><div class="section-head"><div><h2 id="taskHeading">我的任务</h2><div class="muted" id="taskCount"></div></div><div class="task-toolbar"><button id="taskTemplate" class="small ghost">下载模板</button><button id="import" class="small ghost">导入工作</button><button id="export" class="small ghost">导出数据</button><button id="add" class="primary small">＋ 添加工作</button></div></div><div id="taskGradeSummary" class="grade-summary"></div><div id="taskSchemaNotice" class="schema-notice" hidden></div><div class="filters"><input id="search" placeholder="搜索任务或进度" aria-label="搜索任务"><select id="ownerFilter" aria-label="负责人" hidden></select><select id="statusFilter" aria-label="状态"><option value="">全部状态</option><option>待进行</option><option>进行中</option><option>完成</option></select><select id="typeFilter" aria-label="工作等级"><option value="">全部等级</option><option value="S级新品">S级 · 重要工作</option><option value="平台运营">A级 · 平台任务</option><option value="主管安排">B级 · 临时安排</option></select><select id="sourceFilter" aria-label="任务来源"><option value="">全部来源</option></select><select id="focusFilter" aria-label="交付筛选"><option value="">全部交付</option><option value="today">今日到期</option><option value="late">已逾期</option><option value="rush">临时插单</option><option value="archived">回收站</option></select></div><div class="table-wrap"><table><thead><tr><th>工作内容 / 最新进度</th><th>负责人</th><th>任务来源</th><th>状态</th><th>开始时间</th><th>交付时间</th><th>最近更新</th><th>操作</th></tr></thead><tbody id="taskRows"></tbody></table></div><div id="taskEmpty" class="empty" hidden>暂无任务</div><div class="task-pagination"><span id="pageSummary"></span><div class="actions"><button id="prevPage" class="ghost">上一页</button><span id="pageIndex"></span><button id="nextPage" class="ghost">下一页</button></div></div></section></div>
-<section class="panel" id="membersPanel" hidden><div class="section-head"><h2>成员</h2><button class="primary small" id="addMember">＋ 添加</button></div><div id="memberList" class="member-list"></div><div id="membersError" class="message" role="status"></div></section><div id="denied" class="deny" hidden><h2>无访问权限</h2><button id="backToWork" class="primary">返回我的工作</button></div>
+<section class="panel" id="membersPanel" hidden><div class="section-head"><div><h2>成员</h2><p class="muted">岗位可选设计师、摄影师、包装设计师，修改后自动保存。</p></div><button class="primary small" id="addMember">＋ 添加</button></div><div id="memberJobNotice" class="schema-notice" role="status" hidden></div><div id="memberList" class="member-list"></div><div id="membersError" class="message" role="status"></div></section><div id="denied" class="deny" hidden><h2>无访问权限</h2><button id="backToWork" class="primary">返回我的工作</button></div>
 <footer><span>DESIGN WORKSPACE <span style="color:#5b373d">/</span> <span id="footerScope">独立账号 · 专属工作空间</span></span><span id="lastSync">设计团队工作台</span></footer></div>
 <dialog id="memberDialog"><form id="memberForm"><h2 id="memberEditorTitle">添加成员</h2><div class="form-grid" id="memberFields"><label class="wide">姓名<input name="name" required maxlength="40" autocomplete="off"></label><label class="wide">三位编号<div class="member-code-row"><input name="code" required inputmode="numeric" pattern="[0-9]{3}" minlength="3" maxlength="3" autocomplete="off"><button type="button" id="randomCode">随机生成</button></div></label><label class="wide">状态<select name="active"><option value="true">启用</option><option value="false">停用</option></select></label></div><div id="memberError" class="message"></div><div id="memberSaved" hidden></div><div class="actions"><button type="button" id="cancelMember">取消</button><button id="saveMember" class="primary">保存</button></div></form></dialog><dialog id="taskDialog"><form id="taskForm"><h2 id="taskEditorTitle">新增任务</h2><div class="form-grid"><label class="wide">工作内容<input name="title" required maxlength="160" placeholder="例如：新品 A 详情页首轮设计"></label><label id="taskOwnerLabel">负责人<select name="owner" required></select></label><label>工作等级<select name="type"><option value="S级新品">S级 · 重要工作 / 新品详情页</option><option value="平台运营" selected>A级 · 平台任务</option><option value="主管安排">B级 · 临时安排</option></select></label><label>任务来源<input name="source_label" list="taskSourceOptions" maxlength="60" required autocomplete="off" placeholder="选择来源或直接输入文字"><datalist id="taskSourceOptions"><option value="平台运营"></option><option value="S级新品"></option><option value="小皓"></option></datalist><span class="field-help">可选择，也可输入自定义来源</span></label><label>状态<select name="status"><option>待进行</option><option>进行中</option><option>完成</option></select></label><label>开始时间（北京时间）<input name="start" type="datetime-local"></label><label>交付时间（北京时间）<input name="due" type="datetime-local" required></label><label>需求对接人<input name="contact" maxlength="100"></label><label>插单标记<select name="is_rush"><option value="false">常规任务</option><option value="true">临时插单</option></select></label><label class="wide">进度 / 备注<textarea name="note"></textarea></label></div><div class="message" id="taskError"></div><div class="actions"><button type="button" id="cancelTask">取消</button><button class="primary" id="saveTask">保存任务</button></div></form></dialog>
 <dialog id="passwordDialog"><form id="passwordForm"><h2>修改登录密码</h2><label>新密码<input type="password" name="password" required minlength="12" maxlength="128" autocomplete="new-password" placeholder="至少 12 个字符"></label><label style="margin-top:18px">再次输入<input type="password" name="repeat" required minlength="12" autocomplete="new-password"></label><div class="message" id="passwordError"></div><div class="actions"><button type="button" id="cancelPassword">取消</button><button class="primary">更新密码</button></div></form></dialog>
@@ -433,6 +438,13 @@ $('confirmPeriod').onclick=async()=>{if(!isAdmin())return;let period;try{period=
 // Task Studio 04. Legacy daily reports remain read-only history; tasks are the working source.
 const TASK_V4_GRADES={S:{type:'S级新品',label:'重要工作',hint:'新品详情页 · 优先推进'},A:{type:'平台运营',label:'平台任务',hint:'平台运营 · 按期推进'},B:{type:'主管安排',label:'临时安排',hint:'自行灵活安排'}};
 const TASK_V4_DEFAULT_SOURCE={'S级新品':'S级新品','平台运营':'平台运营','主管安排':'小皓'};
+// 岗位只用于展示，账号权限仍使用 employee / manager / director。
+const MEMBER_JOB_OPTIONS=['设计师','摄影师','包装设计师'];
+function memberAccountLabel(profile){
+ if(profile.role==='director')return '总监';
+ if(profile.role==='manager')return '主管';
+ return MEMBER_JOB_OPTIONS.includes(profile.job_title)?profile.job_title:'设计师';
+}
 let taskV4SourceAuto='',taskV4ReportRoute=false;
 document.body.classList.add('task-v4');
 clearTimeout(reportTimer);reportTimer=null;autoSavePaused=true;dirty=false;
@@ -473,7 +485,7 @@ showAccount=function(){
  document.body.classList.toggle('manager-mode',admin);
  $('loginView').hidden=!!me;$('account').hidden=!me;$('nav').hidden=!me;$('loginPill').hidden=!!me;$('entrySwitch').hidden=!!me;
  if(!me)return;
- document.body.classList.remove('entry-admin');$('accountName').textContent=me.display_name;$('roleLabel').textContent=admin?(me.role==='director'?'总监':'主管'):'设计师';$('avatar').textContent=me.display_name.slice(-2);
+ document.body.classList.remove('entry-admin');$('accountName').textContent=me.display_name;$('roleLabel').textContent=memberAccountLabel(me);$('avatar').textContent=me.display_name.slice(-2);
  $('nav').innerHTML=admin?'<button data-page="overview">团队总览</button><button data-page="tasks">任务清单</button><button data-page="members">成员</button><button data-page="reports">历史记录</button>':'<button data-page="tasks">我的工作</button>';
  $('demoBar').hidden=!demo;$('password').hidden=demo||!admin;$('footerScope').textContent='';
 };
@@ -704,6 +716,52 @@ makeDemo=function(role){
  if(role==='employee')setRoute('tasks');
  showAccount();renderRoute();renderData();
 };
+
+// Member job choices are saved independently from login/name/code changes.
+const memberJobPending=new Map();
+function memberJobEnabled(){return demo||!!me&&Object.hasOwn(me,'job_title')}
+function memberJobValue(member){
+ const pending=memberJobPending.get(member.id);
+ if(pending)return pending;
+ const profile=members.find(p=>p.id===member.id)||member;
+ return MEMBER_JOB_OPTIONS.includes(profile.job_title)?profile.job_title:'设计师';
+}
+renderManagedMembers=function(){
+ if(!isAdmin())return;
+ const enabled=memberJobEnabled();
+ $('memberJobNotice').hidden=enabled;
+ $('memberJobNotice').textContent='岗位选择需要先运行“成员岗位升级.sql”。原成员、姓名和编号保持不变。';
+ $('memberList').innerHTML=managedMembers.map(m=>{
+  const selected=memberJobValue(m),saving=memberJobPending.has(m.id),known=demo||members.some(p=>p.id===m.id&&Object.hasOwn(p,'job_title'));
+  return '<div class="access-member"><span class="avatar">'+esc(m.display_name.slice(-2))+'</span><div class="member-name">'+esc(m.display_name)+'</div><label class="member-job-label">岗位<select data-member-job="'+esc(m.id)+'" aria-label="'+esc(m.display_name)+'的岗位" '+(!enabled||saving||!known?'disabled':'')+'>'+MEMBER_JOB_OPTIONS.map(job=>'<option '+(job===selected?'selected':'')+'>'+job+'</option>').join('')+'</select><span class="member-job-state" role="status">'+(saving?'保存中…':!enabled?'请先启用岗位功能':!known?'读取岗位中…':'修改后自动保存')+'</span></label><span class="badge '+(m.active?'green':'')+'">'+(m.active?'启用':'停用')+'</span><span class="muted">'+(!m.ready?'未设置编号':m.locked_until&&Date.parse(m.locked_until)>Date.now()?'已锁定':'已设置编号')+'</span><div class="member-actions"><button class="small ghost" data-member-edit="'+esc(m.id)+'">设置</button><button class="small ghost" data-member-toggle="'+esc(m.id)+'">'+(m.active?'停用':'启用')+'</button></div></div>';
+ }).join('')||'<div class="empty">暂无成员</div>';
+};
+async function saveMemberJob(id,job){
+ if(!isAdmin()||!MEMBER_JOB_OPTIONS.includes(job)||memberJobPending.has(id))return;
+ const member=managedMembers.find(p=>p.id===id);if(!member)return;
+ if(!memberJobEnabled()){$('membersError').textContent='请先运行“成员岗位升级.sql”，再选择岗位。';return}
+ const gen=generation;memberJobPending.set(id,job);$('membersError').textContent='';renderManagedMembers();
+ try{
+  let profile;
+  if(demo)profile={...(members.find(p=>p.id===id)||member),job_title:job};
+  else{
+   if(offline)throw Error('not-ready');
+   const {data,error}=await client.rpc('design_set_member_job',{p_member_id:id,p_job_title:job});
+   if(error)throw error;if(!data||data.id!==id||data.job_title!==job)throw Error('岗位保存未确认，请刷新后检查');profile=data;
+  }
+  if(gen!==generation||!isAdmin())return;
+  invalidateReads();members=members.filter(p=>p.id!==id).concat(profile);
+  managedMembers=managedMembers.map(p=>p.id===id?{...p,job_title:job}:p);
+  if(me.id===id)me=profile;
+  showAccount();renderData();toast('已保存岗位：'+job);
+ }catch(error){if(gen===generation)$('membersError').textContent=error.code==='PGRST202'||error.code==='42883'?'请先运行“成员岗位升级.sql”，再选择岗位。':publicError(error)}
+ finally{if(gen===generation){memberJobPending.delete(id);renderManagedMembers()}}
+}
+$('memberList').onchange=e=>{const select=e.target.closest('[data-member-job]');if(select)saveMemberJob(select.dataset.memberJob,select.value)};
+const memberJobRenderData=renderData;
+renderData=function(){memberJobRenderData();if(isAdmin()&&location.hash==='#members')renderManagedMembers()};
+const memberJobClear=clearWorkspace;
+clearWorkspace=function(){memberJobPending.clear();memberJobClear();$('memberJobNotice').hidden=true};
 
 
 (async()=>{if(CLOUD_CONFIG.url){try{await loadClient();const {data,error}=await client.auth.getUser();if(!error&&data.user)await enterUser(data.user)}catch{$('loginMessage').textContent='项目配置不可用，请联系管理者检查。'}}})();
