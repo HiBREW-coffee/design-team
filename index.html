@@ -247,6 +247,12 @@ body.task-v4:not(.signed-out) .topline{margin-bottom:18px}
 .task-v4 .member-select[aria-pressed=true]{border-color:#c75c73;background:linear-gradient(155deg,#9e1e2e27,#151114 75%);box-shadow:inset 0 0 0 1px #b7475b20}
 .task-v4 .member-select:focus-visible{outline:2px solid #e0a5b4;outline-offset:3px}
 .task-v4 .member-card-name{display:block;font-size:13px;font-weight:500;line-height:1.7}
+.task-v4 .member-delivery-total{display:block;margin-top:4px;color:#948795;font-size:10px;font-weight:400;line-height:1.7}
+.task-v4 .member-workload{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}
+.task-v4 .member-workload-item{display:block;min-width:0}
+.task-v4 .member-workload-label{display:block;color:#b6a5b4;font-size:10px;font-weight:400;line-height:1.6}
+.task-v4 .member-workload strong{display:block;margin:5px 0 0;font-family:Arial,sans-serif;font-size:26px;line-height:1.15;font-weight:500;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;color:#f2e5eb}
+.task-v4 .member-workload-item[data-state=pending] strong{color:#d0c5d3}
 .task-v4 .member-select .member-status,.task-v4 .member-select .member-next{display:block}
 .task-v4 .member-select .member-next{margin-top:10px}
 .task-v4 .member-overview-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap}
@@ -785,7 +791,7 @@ renderData=function(){
  $('adminStats').innerHTML=statsHtml(active,true);
  $('teamGrid').innerHTML=enabled.filter(p=>p.role==='employee').map(p=>{
   const rows=active.filter(t=>t.owner_id===p.id),open=rows.filter(t=>t.status!=='完成'),next=open.slice().sort((a,b)=>['S','A','B'].indexOf(taskGrade(a))-['S','A','B'].indexOf(taskGrade(b))||(taskDueSort(a)-taskDueSort(b)||0))[0];
-  return '<button type="button" class="member member-select" data-member-tasks="'+esc(p.id)+'" aria-pressed="'+String($('ownerFilter').value===p.id)+'" aria-controls="taskPanel" aria-label="查看'+esc(p.display_name)+'在所选月份的工作清单"><span class="avatar">'+esc(p.display_name.slice(-2))+'</span><span class="member-card-name">'+esc(p.display_name)+'</span><strong>'+open.length+'<span class="muted"> 项待交付</span></strong><span class="member-priorities">'+['S','A','B'].map(g=>'<span class="'+(g==='S'?'important':'')+'">'+g+' '+open.filter(t=>taskGrade(t)===g).length+'</span>').join('')+'</span><span class="member-status">'+rows.filter(t=>t.status==='进行中').length+' 项进行中 · '+rows.filter(overdue).length+' 项逾期</span>'+(next?'<span class="member-next">'+esc(next.title)+'<br>'+esc(next.due_at?dateTime(next.due_at):'未排期')+'</span>':'<span class="member-next">当前没有待交付任务</span>')+'</button>';
+  return '<button type="button" class="member member-select" data-member-tasks="'+esc(p.id)+'" aria-pressed="'+String($('ownerFilter').value===p.id)+'" aria-controls="taskPanel" aria-label="查看'+esc(p.display_name)+'在所选月份的工作清单"><span class="avatar">'+esc(p.display_name.slice(-2))+'</span><span class="member-card-name">'+esc(p.display_name)+'</span><span class="member-delivery-total">待交付 '+open.length+' 项</span><span class="member-workload"><span class="member-workload-item" data-state="ongoing"><span class="member-workload-label">进行中</span><strong>'+rows.filter(t=>t.status==='进行中').length+'</strong></span><span class="member-workload-item" data-state="pending"><span class="member-workload-label">待进行</span><strong>'+rows.filter(t=>t.status==='待进行').length+'</strong></span></span><span class="member-priorities">'+['S','A','B'].map(g=>'<span class="'+(g==='S'?'important':'')+'">'+g+' '+open.filter(t=>taskGrade(t)===g).length+'</span>').join('')+'</span><span class="member-status">逾期 '+rows.filter(overdue).length+' 项</span>'+(next?'<span class="member-next">'+esc(next.title)+'<br>'+esc(next.due_at?dateTime(next.due_at):'未排期')+'</span>':'<span class="member-next">当前没有待交付任务</span>')+'</button>';
  }).join('')||'<div class="empty">请先在成员管理中添加设计师</div>';
  const openCards=new Set([...document.querySelectorAll('#reportList details[open]')].map(x=>x.dataset.reportId));
  renderCompactReports(openCards);taskV4RenderSources();renderTasks();syncDetail();
