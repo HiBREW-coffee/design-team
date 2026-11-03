@@ -396,6 +396,9 @@ body.task-v4:not(.signed-out) .shell{width:100%;max-width:none;margin:0;min-heig
 .task-v4 .member-select .member-load-heading strong{font-size:30px;line-height:34px;min-width:76px}
 .task-v4 .member-select .member-load-heading small{font-size:12px}
 .task-v4 .member-select .member-load-caption{min-height:18px;height:18px;line-height:18px;font-size:11px}
+.task-v4 .member-last-update{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 6px;margin-top:12px;padding-top:10px;border-top:1px solid #ffffff0a;min-height:29px;color:#a398a6;font-size:11px;font-weight:400;line-height:18px;text-align:left}
+.task-v4 .member-last-update>span{white-space:nowrap}
+.task-v4 .member-last-update time{font-variant-numeric:tabular-nums;white-space:nowrap;color:#b2a9b5}
 .task-v4 .member-status-corner{position:absolute;right:20px;top:22px;z-index:2;max-width:calc(100% - 78px)}
 .task-v4 .availability-pill{position:relative;display:inline-flex;align-items:center;gap:4px;height:23px;padding:0 6px;border:1px solid #ffffff12;border-radius:7px;background:#171719;color:#b6d1bb;white-space:nowrap;max-width:100%;font-size:9px;line-height:23px}
 .task-v4 .availability-dot{display:block;flex:0 0 5px;height:5px;width:5px;border-radius:50%;background:currentColor;box-shadow:0 0 5px currentColor}
@@ -1279,10 +1282,7 @@ function chooseMemberTaskScope(owner=''){
 }
 $('teamGrid').onclick=event=>{
  const card=event.target.closest('[data-member-tasks]');
- if(card){
-  chooseMemberTaskScope(card.dataset.memberTasks);setRoute('tasks');renderRoute();renderTasks();
-  if(typeof window.scrollTo==='function')window.scrollTo({top:0,behavior:'auto'});
- }
+ if(card)chooseMemberTaskScope(card.dataset.memberTasks);
 };
 $('clearMemberTaskScope').onclick=()=>chooseMemberTaskScope('');
 // Existing dropdown, month, refresh and status handlers already render tasks.
@@ -1299,6 +1299,20 @@ clearWorkspace=function(){
 // Read-only overview calculations. Stored task types, flags and notes are never rewritten.
 const TASK_LOAD_WEIGHTS=Object.freeze({S:60,A:30,B:10});
 let adminOverviewCache=null;
+const memberTaskUpdateFormatter=new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+function memberLatestTaskUpdate(rows){
+ let latest=-Infinity;
+ for(const task of rows){
+  const updated=Date.parse(task.updated_at),created=Date.parse(task.created_at);
+  const stamp=Number.isFinite(updated)?updated:created;
+  if(Number.isFinite(stamp)&&stamp>latest)latest=stamp;
+ }
+ return Number.isFinite(latest)?new Date(latest).toISOString():null;
+}
+function memberTaskUpdateMarkup(rows){
+ const stamp=memberLatestTaskUpdate(rows);
+ return '<span class="member-last-update" title="该成员任务最近一次保存的时间（北京时间），包含跨月任务及回收站操作"><span>最近更新</span>'+(stamp?'<time datetime="'+stamp+'">'+esc(memberTaskUpdateFormatter.format(new Date(stamp)))+'</time>':'<span>暂无记录</span>')+'</span>';
+}
 function taskIsInterruption(task){
  const source=String(task.source_label||'').normalize('NFKC').replace(/\s+/g,'');
  return task.is_rush===true||task.type==='主管安排'||['临时安排','临时插单'].includes(source);
@@ -1333,17 +1347,18 @@ function renderAdminOverview(){
  ];
  $('adminStats').innerHTML=values.map(([key,label,count,note])=>'<div class="stat" data-overview-stat="'+key+'"><div class="stat-top">'+label+'<span class="dot"></span></div><strong>'+count.toString().padStart(2,'0')+'</strong><span class="mini">'+esc(note)+'</span>'+(key==='rush'?'<span class="stat-detail">'+monthLabel+'已完成插单 '+summary.rushDone+' 项</span>':'')+'</div>').join('');
  const enabled=members.filter(p=>p.role==='employee'&&p.active!==false);
- const grouped=new Map();for(const task of active){if(!grouped.has(task.owner_id))grouped.set(task.owner_id,[]);grouped.get(task.owner_id).push(task)}
+ const grouped=new Map();for(const task of tasks){if(!grouped.has(task.owner_id))grouped.set(task.owner_id,[]);grouped.get(task.owner_id).push(task)}
  const badgeRow=(counts,kind)=>'<span class="member-priorities" data-count-kind="'+kind+'">'+['S','A','B'].map(g=>'<span class="'+(g==='S'?'important':'')+'" data-grade="'+g+'">'+g+' '+counts[g]+'</span>').join('')+'</span>';
  const cards=enabled.map(profile=>({profile,rows:grouped.get(profile.id)||[]})).map(entry=>({...entry,summary:taskOverviewSummary(entry.rows,month)}));
  cards.sort((a,b)=>b.summary.load-a.summary.load||a.profile.display_name.localeCompare(b.profile.display_name,'zh-CN')||a.profile.id.localeCompare(b.profile.id));
- $('teamGrid').innerHTML=cards.map(({profile,summary:s})=>{
-  return '<article class="member-shell"><div class="member-status-corner">'+memberAvailabilityWidget(profile,s)+'</div><button type="button" class="member member-select" data-member-tasks="'+esc(profile.id)+'" aria-pressed="'+String($('ownerFilter').value===profile.id)+'" aria-controls="taskPanel" aria-label="查看'+esc(profile.display_name)+'在所选月份的工作清单"><span class="avatar">'+esc(profile.display_name.slice(-2))+'</span><span class="member-card-name" title="'+esc(profile.display_name)+'">'+esc(profile.display_name)+'</span><span class="member-delivery-total">当前待交付 '+s.open+' 项</span>'
+ $('teamGrid').innerHTML=cards.map(({profile,rows,summary:s})=>{
+  return '<article class="member-shell"><div class="member-status-corner">'+memberAvailabilityWidget(profile,s)+'</div><button type="button" class="member member-select" data-member-tasks="'+esc(profile.id)+'" aria-pressed="'+String($('ownerFilter').value===profile.id)+'" aria-controls="taskPanel" aria-label="选中'+esc(profile.display_name)+'，在下方查看工作清单"><span class="avatar">'+esc(profile.display_name.slice(-2))+'</span><span class="member-card-name" title="'+esc(profile.display_name)+'">'+esc(profile.display_name)+'</span><span class="member-delivery-total">当前待交付 '+s.open+' 项</span>'
    +'<span class="member-workload"><span class="member-workload-item" data-state="ongoing"><span class="member-workload-label">进行中</span><strong>'+s.ongoing+'</strong></span><span class="member-workload-item" data-state="pending"><span class="member-workload-label">待进行</span><strong>'+s.pending+'</strong></span></span>'
    +'<span class="member-grade-caption">待交付分级</span>'+badgeRow(s.openGrades,'open')
    +'<span class="member-status"><span>逾期 '+s.overdue+' 项</span><span>'+monthLabel+'已完成 '+s.done+' 项</span></span>'
    +badgeRow(s.doneGrades,'done')
    +renderTaskLoadReference(s,profile)
+   +memberTaskUpdateMarkup(rows)
    +'</button></article>';
  }).join('')||'<div class="empty">请先在成员管理中添加设计师</div>';
  adminOverviewCache={tasks,members,month,minute,user:me.id,sort:$('taskSort').value};
@@ -1360,7 +1375,7 @@ const adminOverviewMemberScope=renderMemberTaskScope;
 renderMemberTaskScope=function(){
  adminOverviewMemberScope();if(!isAdmin())return;
  const month=taskSelectedMonth().replace('-',' 年 ')+' 月';
- $('teamScopeHint').textContent='按负载高 → 低排列 · 点击成员查看任务';
+ $('teamScopeHint').textContent='按负载高 → 低排列 · 点击成员筛选下方清单';
 };
 // Export the same derived interpretation while preserving the original is_rush flag.
 const adminOverviewPeriodSummary=taskPeriodDeliverySummary;
