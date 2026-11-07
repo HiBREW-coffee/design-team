@@ -1561,10 +1561,10 @@ body:not(.signed-out) .login-transit-preview { display: none; }
 .login-transit:is([data-stage="reveal"], [data-stage="failure"]) { pointer-events: none; }
 #pageHeading[tabindex="-1"]:focus { outline: none; }
 </style><style id="availabilityStudioStyle">
-:where(.member-shell,#personalLoadPanel):has([data-availability-state="超负荷"]), .availability-daily [data-daily-tone="over"] { --availability-ink:#d84d6d; --availability-glow:#a41538; }
-:where(.member-shell,#personalLoadPanel):has([data-availability-state="负荷"]), .availability-daily [data-daily-tone="full"] { --availability-ink:#ff746b; --availability-glow:#e23c36; }
-:where(.member-shell,#personalLoadPanel):has([data-availability-state="较忙"]), .availability-daily [data-daily-tone="busy"] { --availability-ink:#f6ba62; --availability-glow:#e48a22; }
-:where(.member-shell,#personalLoadPanel):has([data-availability-state="可接受任务"]), .availability-daily [data-daily-tone="open"] { --availability-ink:#94d6ab; --availability-glow:#42ad79; }
+:where(.member-shell,#personalLoadPanel,#studioDashboard):has([data-availability-state="超负荷"]), .availability-daily [data-daily-tone="over"] { --availability-ink:#d84d6d; --availability-glow:#a41538; }
+:where(.member-shell,#personalLoadPanel,#studioDashboard):has([data-availability-state="负荷"]), .availability-daily [data-daily-tone="full"] { --availability-ink:#ff746b; --availability-glow:#e23c36; }
+:where(.member-shell,#personalLoadPanel,#studioDashboard):has([data-availability-state="较忙"]), .availability-daily [data-daily-tone="busy"] { --availability-ink:#f6ba62; --availability-glow:#e48a22; }
+:where(.member-shell,#personalLoadPanel,#studioDashboard):has([data-availability-state="可接受任务"]), .availability-daily [data-daily-tone="open"] { --availability-ink:#94d6ab; --availability-glow:#42ad79; }
 .taste-studio.manager-mode #teamGrid .member-shell .member-load-heading strong,
 .taste-studio.manager-mode #teamGrid .member-shell .member-load-heading small,
 .taste-studio #personalLoadPanel .member-load-heading strong,
@@ -1749,6 +1749,8 @@ body:not(.signed-out) .login-transit-preview { display: none; }
 /* Anchor the effect to the entire overview card, outside either data column. */
 .taste-studio:not(.manager-mode) #studioDashboard:has(#personalLoadPanel:not([hidden])) { position:relative; }
 .personal-warm-light {
+  --flame-ink:var(--availability-ink,#df899c);
+  --flame-glow:var(--availability-glow,#a41538);
   position:absolute; inset:0; z-index:-1; overflow:hidden; border-radius:inherit; pointer-events:none;
 }
 .personal-warm-light::before, .personal-warm-light i {
@@ -1756,20 +1758,20 @@ body:not(.signed-out) .login-transit-preview { display: none; }
 }
 .personal-warm-light::before {
   content:"";
-  background:radial-gradient(ellipse at 98% 99%,#ffc77a75,#f1804555 17%,#ad3e4336 38%,transparent 70%);
+  background:radial-gradient(ellipse at 98% 99%,color-mix(in srgb,var(--flame-ink) 46%,transparent),color-mix(in srgb,var(--flame-glow) 34%,transparent) 17%,color-mix(in srgb,var(--flame-glow) 21%,transparent) 38%,transparent 70%);
 }
 .personal-warm-light i {
   right:-54px; bottom:-23px; transform-origin:95% 100%; opacity:.62;
-  background:radial-gradient(ellipse at 82% 93%,#fbb3729a,#df70455e 18%,#ae3b4245 34%,transparent 68%);
+  background:radial-gradient(ellipse at 82% 93%,color-mix(in srgb,var(--flame-ink) 60%,transparent),color-mix(in srgb,var(--flame-glow) 37%,transparent) 18%,color-mix(in srgb,var(--flame-glow) 27%,transparent) 34%,transparent 68%);
 }
 .personal-warm-light i:nth-of-type(2) {
-  background:radial-gradient(ellipse at 89% 88%,#f8c28389,#cd5b4c5e 19%,transparent 59%);
+  background:radial-gradient(ellipse at 89% 88%,color-mix(in srgb,var(--flame-ink) 54%,transparent),color-mix(in srgb,var(--flame-glow) 37%,transparent) 19%,transparent 59%);
 }
 
 .taste-studio .delivery-ring.is-segmented > svg { display:block; width:100%; height:100%; transform:none; }
 .delivery-dial-arc { fill:none; stroke:#503842; stroke-width:8; stroke-linecap:round; }
-.delivery-dial-arc.is-filled { stroke:#df899c; }
-.taste-studio .delivery-ring.is-segmented .delivery-ring-value strong { color:#fff0f2; font-size:clamp(18px,2vw,27px); font-weight:650; letter-spacing:-.04em; line-height:1; }
+.delivery-dial-arc.is-filled { stroke:var(--availability-ink,#df899c); }
+.taste-studio .delivery-ring.is-segmented .delivery-ring-value strong { color:var(--availability-ink,#fff0f2); font-size:clamp(18px,2vw,27px); font-weight:650; letter-spacing:-.04em; line-height:1; }
 .taste-studio .delivery-ring.is-segmented .delivery-ring-value small { margin-top:5px; font-size:8px; color:#c4aeb8; white-space:nowrap; }
 .taste-studio.manager-mode .delivery-ring.is-segmented .delivery-ring-value strong { font-size:18px; }
 .availability-daily .availability-history-hint { color:#b4a0a8; font-size:10px; line-height:1.5; }
