@@ -1504,7 +1504,17 @@ body.viewer-mode #taskPanel th:last-child,body.viewer-mode #taskRows tr[data-tas
 .login-transit-veil {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 95%, #35131b95, transparent 50%), #0806099c;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 48% 74%, #241720 0%, #100d13 55%, #08070a 83%);
+}
+.login-transit-mist {
+  position: absolute;
+  inset: -12%;
+  background:
+    radial-gradient(ellipse at 63% 52%, #9d65764a, transparent 53%),
+    radial-gradient(ellipse at 24% 65%, #6439445c, transparent 55%),
+    radial-gradient(ellipse at 82% 32%, #bd9ea23a, transparent 47%);
+  pointer-events: none;
 }
 .login-transit-status {
   position: absolute;
@@ -1822,7 +1832,8 @@ function renderData(){if(!me)return;const admin=isAdmin(),visibleReports=reports
 async function collect(queryFn){let all=[];for(let page=0;;page++){const {data,error}=await queryFn().range(page*500,page*500+499);if(error)throw error;all.push(...data);if(data.length<500)return all;}}
 async function refreshData({manual=false}={}){if(!me||demo){if(me)renderData();return}const gen=generation,id=++requestId,userId=me.id;loading=true;$('syncState').textContent='更新中';try{const {data:profile,error:pErr}=await client.from('design_profiles').select('*').eq('id',userId).single();if(pErr||!profile?.active){if(gen===generation){clearWorkspace();$('loginMessage').textContent='账号未启用，请联系管理者。'}return}if(gen!==generation||id!==requestId)return;me=profile;const admin=isAdmin(),date=admin?$('adminDate').value:$('reportDate').value;const results=await Promise.all([collect(()=>client.from('design_profiles').select('*').eq('active',true).order('id')),collect(()=>{let q=client.from('design_tasks').select('*').order('id');return admin?q:q.eq('owner_id',userId)}),collect(()=>{let q=client.from('design_reports').select('*').eq('report_date',date).order('owner_id');return admin?q:q.eq('owner_id',userId)})]);if(gen!==generation||id!==requestId)return;[members,tasks,reports]=results;offline=false;lastUpdate=dateTime(new Date().toISOString());showAccount();renderRoute();renderData();$('syncState').textContent='已连接';$('lastSync').textContent='最近更新 '+lastUpdate+' · 自动刷新每 60 秒';if(manual)toast('已获取最新工作内容')}catch(error){if(gen===generation&&id===requestId){offline=true;$('syncState').textContent='连接异常';toast(publicError(error))}}finally{if(gen===generation&&id===requestId)loading=false}}
 function makeDemo(role){clearWorkspace();demo=true;const ids=Array.from({length:7},(_,i)=>'demo-'+(i+1));me={id:role==='employee'?ids[0]:'demo-admin',display_name:role==='employee'?'设计师 01':'主管',role,active:true};members=role==='employee'?[me]:[...ids.map((id,i)=>({id,display_name:'设计师 '+String(i+1).padStart(2,'0'),role:'employee',active:true})),me];const templates=[['新品 A 详情页首轮设计','S级新品','进行中','已完成首屏与功能区，正在完善场景图。'],['平台活动主图更新','平台运营','待进行','等待运营确认活动价格和文案。'],['秋季促销视觉提案','主管安排','完成','视觉方案已确认，源文件已交付。'],['临时加急：产品卖点海报','平台运营','进行中','临时增加 2 张海报，预计今天交付。']];tasks=members.filter(p=>p.role==='employee').flatMap((p,i)=>templates.slice(0,i===0?4:2+(i%2)).map(([title,type,status,note],j)=>({id:'sample-'+p.id+'-'+j,owner_id:p.id,title,type,status,note,contact:'运营同事',is_rush:j===3||(i===2&&j===1),due_at:day()+'T'+(j===0?'18:00':j===1?'20:00':j===2?'16:00':'17:00')+':00+08:00',updated_at:new Date(Date.now()-i*600000).toISOString(),version:1})));reports=members.filter(p=>p.role==='employee').slice(0,role==='employee'?1:5).map((p,i)=>({id:'report-'+p.id,owner_id:p.id,report_date:day(),done:i===0?'活动主图 3 张已交付，促销视觉提案已确认。':'完成新品详情页首屏方案。',ongoing:'新品 A 详情页，已完成约 60%。',planned:'完善场景图，整理交付源文件。',delivery:'新品 A 详情页，明天 18:00 交付。',rush:i===0?'临时增加卖点海报 2 张，今天 17:00 交付。':'暂无',blockers:'等待运营确认产品参数。',updated_at:new Date().toISOString(),version:1}));$('reportDate').value=day();$('adminDate').value=day();previousDate=day();$('syncState').textContent='示例数据';$('lastSync').textContent='界面演示 · 刷新恢复示例';setRoute(role==='employee'?'work':'overview');showAccount();renderRoute();renderData()}
-async function enterUser(user){const gen=++generation;try{const {data:profile,error}=await client.from('design_profiles').select('*').eq('id',user.id).single();if(gen!==generation)return;if(error&&!['PGRST116','PGRST301','PGRST302'].includes(error.code)){$('loginMessage').textContent='连接暂时异常，请稍后刷新；本标签页草稿仍保留。';return}if(error||!profile?.active)throw Error('not-enrolled');demo=false;me=profile;$('reportDate').value=day();$('adminDate').value=day();previousDate=day();setRoute(isAdmin()?'overview':'work');showAccount();renderRoute();await refreshData();clearInterval(poll);poll=setInterval(()=>{if(!document.hidden&&me&&!demo)refreshData()},10000);startRealtime()}catch(e){if(gen===generation){clearWorkspace();$('loginMessage').textContent='账号尚未配置或未启用，请联系管理者。'}}}
+let beforeWorkspaceReveal = null;
+async function enterUser(user){const gen=++generation;try{const {data:profile,error}=await client.from('design_profiles').select('*').eq('id',user.id).single();if(gen!==generation)return;if(error&&!['PGRST116','PGRST301','PGRST302'].includes(error.code)){$('loginMessage').textContent='连接暂时异常，请稍后刷新；本标签页草稿仍保留。';return}if(error||!profile?.active)throw Error('not-enrolled');const sceneGate=beforeWorkspaceReveal?.();if(sceneGate)await sceneGate;if(gen!==generation)return;demo=false;me=profile;$('reportDate').value=day();$('adminDate').value=day();previousDate=day();setRoute(isAdmin()?'overview':'work');showAccount();renderRoute();await refreshData();clearInterval(poll);poll=setInterval(()=>{if(!document.hidden&&me&&!demo)refreshData()},10000);startRealtime()}catch(e){if(gen===generation){clearWorkspace();$('loginMessage').textContent='账号尚未配置或未启用，请联系管理者。'}}}
 async function loadClient(){if(client)return client;if(!CLOUD_CONFIG.url||!CLOUD_CONFIG.publishableKey)throw Error('not-configured');const url=new URL(CLOUD_CONFIG.url);if(url.protocol!=='https:'||!url.hostname.endsWith('.supabase.co'))throw Error('bad-url');if(CLOUD_CONFIG.publishableKey.startsWith('sb_secret_'))throw Error('secret-key');if(!CLOUD_CONFIG.publishableKey.startsWith('sb_publishable_')){try{const p=JSON.parse(atob(CLOUD_CONFIG.publishableKey.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));if(p.role!=='anon')throw Error('secret-key')}catch{throw Error('仅允许 publishable key 或旧版 anon key')}}client=supabase.createClient(CLOUD_CONFIG.url,CLOUD_CONFIG.publishableKey,{auth:{storage:sessionStorage,persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storageKey:'design-auth-'+url.hostname}});client.auth.onAuthStateChange(event=>{if(event==='SIGNED_OUT'){const gen=generation;setTimeout(()=>{if(!demo&&me&&gen===generation)clearWorkspace()},0)}});return client;}
 $('loginForm').onsubmit=async e=>{e.preventDefault();$('signIn').disabled=true;$('loginMessage').textContent='正在登录…';try{await loadClient();if(demo)clearWorkspace();demo=false;const {data,error}=await client.auth.signInWithPassword({email:e.target.elements.email.value.trim(),password:e.target.elements.password.value});e.target.elements.password.value='';if(error)throw error;await enterUser(data.user)}catch(error){$('loginMessage').textContent=!CLOUD_CONFIG.url?'请先完成数据库配置，或使用下方界面预览。':publicError(error)}finally{$('signIn').disabled=false}};
 $('demoEmployee').onclick=()=>makeDemo('employee');$('demoAdmin').onclick=()=>makeDemo('manager');$('switchDemo').onclick=()=>{if(dirty&&!confirm('切换将放弃未提交的示例内容，继续？'))return;makeDemo(isAdmin()?'employee':'manager')};
@@ -3872,19 +3883,24 @@ const viewerClear=clearWorkspace;clearWorkspace=function(){++viewerAccountsReque
   const gsap = window.gsap;
   if (!gsap) return;
   const shell = document.querySelector('.shell');
+  const scene = [...document.querySelectorAll('.studio-content,.studio-sidebar')];
   const layer = document.getElementById('loginTransit');
   const veil = layer.querySelector('.login-transit-veil');
+  const mist = veil.appendChild(document.createElement('span'));
+  mist.className = 'login-transit-mist';
   const status = layer.querySelector('.login-transit-status');
   const label = layer.querySelector('.login-transit-label');
   const fill = layer.querySelector('.login-transit-fill');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let pending = false;
+  let covered = null;
 
   function setStage(stage, text) {
     layer.dataset.stage = stage;
     label.textContent = text;
   }
 
+  beforeWorkspaceReveal = () => pending ? covered : null;
   const show = showAccount;
   showAccount = function () {
     const result = show();
@@ -3898,45 +3914,87 @@ const viewerClear=clearWorkspace;clearWorkspace=function(){++viewerAccountsReque
     if (pending) return;
     pending = true;
     const previousFocus = document.activeElement;
-    const soften = reduced.matches;
-    const blur = soften ? 0 : matchMedia('(max-width: 600px)').matches ? 5 : 7;
-    gsap.killTweensOf([veil, status, fill]);
-    gsap.set(veil, { opacity: soften ? 0.8 : 0, backdropFilter: 'blur(0px)' });
+    const previousInert = shell.inert;
+    const quiet = reduced.matches;
+    const compact = matchMedia('(max-width: 600px)').matches;
+    const blur = quiet ? 0 : compact ? 4 : 6;
+    const clearScene = targets => gsap.set(targets, { clearProps: 'transform,opacity,filter,transformOrigin' });
+    let resolveCover;
+    let retreat;
+
+    gsap.set(veil, { opacity: quiet ? 1 : 0 });
+    gsap.set(mist, { opacity: quiet ? 0 : .16, scale: .86 });
     gsap.set(status, { opacity: 1, y: 0 });
     gsap.set(fill, { scaleX: 0 });
     setStage('auth', '正在验证身份');
     layer.hidden = false;
     shell.inert = true;
-    gsap.to(veil, { opacity: 1, backdropFilter: 'blur(' + blur + 'px)', duration: soften ? 0.12 : 0.28, ease: 'power2.out' });
+
+    if (!quiet) {
+      covered = new Promise(resolve => { resolveCover = resolve; });
+      retreat = gsap.timeline({
+        defaults: { duration: .64, ease: 'sine.inOut' },
+        onComplete() {
+          clearScene(shell);
+          resolveCover();
+        }
+      });
+      retreat.to(shell, { scale: compact ? .965 : .946, opacity: .44, filter: 'blur('+blur+'px)' }, 0)
+        .to(veil, { opacity: 1 }, 0)
+        .to(mist, { scale: 1, opacity: .64 }, 0);
+    }
+
+    const finish = entered => {
+      clearScene(shell);
+      clearScene(scene);
+      layer.hidden = true;
+      shell.inert = previousInert;
+      covered = null;
+      pending = false;
+      if (document.activeElement !== document.body) return;
+      if (entered) {
+        const heading = document.getElementById('pageHeading');
+        heading.tabIndex = -1;
+        heading.focus({ preventScroll: true });
+      } else if (previousFocus instanceof HTMLElement) {
+        previousFocus.focus({ preventScroll: true });
+      }
+    };
 
     try {
       await run();
     } finally {
       const entered = !document.body.classList.contains('signed-out');
-      pending = false;
-      shell.inert = false;
-      const finish = () => {
-        layer.hidden = true;
-        if (entered) {
-          const heading = document.getElementById('pageHeading');
-          if (document.activeElement === document.body) {
-            heading.tabIndex = -1;
-            heading.focus({ preventScroll: true });
-          }
-        } else if (previousFocus instanceof HTMLElement && document.activeElement === document.body) {
-          previousFocus.focus({ preventScroll: true });
-        }
-      };
-      gsap.killTweensOf([veil, status, fill]);
-      if (entered) {
-        setStage('reveal', '进入工作台');
-        gsap.to(fill, { scaleX: 1, duration: soften ? 0 : 0.24, ease: 'power2.out' });
-        gsap.to(status, { opacity: 0, y: soften ? 0 : 3, duration: soften ? 0.12 : 0.30, ease: 'power2.out' });
-        gsap.to(veil, { opacity: 0, backdropFilter: 'blur(0px)', duration: soften ? 0.12 : 0.42, ease: 'power2.out', onComplete: finish });
-      } else {
+      if (!entered) {
+        retreat?.kill();
+        resolveCover?.();
         setStage('failure', '');
-        gsap.set(status, { opacity: 0 });
-        gsap.to(veil, { opacity: 0, backdropFilter: 'blur(0px)', duration: 0.14, ease: 'power2.out', onComplete: finish });
+        gsap.timeline({ defaults: { duration: quiet ? .1 : .26, ease: 'power2.out' },
+          onComplete: () => finish(false) })
+          .to(status, { opacity: 0, duration: .1 }, 0)
+          .to(veil, { opacity: 0 }, 0)
+          .to(shell, { scale: 1, opacity: 1, filter: 'blur(0px)' }, 0);
+      } else {
+        setStage('reveal', '进入工作台');
+        if (quiet) {
+          gsap.timeline({ defaults: { duration: .12 }, onComplete: () => finish(true) })
+            .set(fill, { scaleX: 1 })
+            .to([veil,status], { opacity: 0 });
+        } else {
+          gsap.set(scene, { scale: compact ? .95 : .923, opacity: .48,
+            filter: 'blur('+blur+'px)', transformOrigin: '50% 40%' });
+          const forward = .48;
+          gsap.timeline({ defaults: { ease: 'power2.in' }, onComplete: () => finish(true) })
+            .addLabel('advance',0)
+            .to(scene, { scale: .982, opacity: .94, filter: 'blur(2px)', duration: forward }, 'advance')
+            .to(veil, { opacity: .22, duration: forward }, 'advance')
+            .to(mist, { scale: 1.27, opacity: .28, duration: forward }, 'advance')
+            .to(fill, { scaleX: 1, duration: .24, ease: 'power2.out' }, 'advance')
+            .to(status, { opacity: 0, y: 4, duration: .26, ease: 'power2.out' }, 'advance+=0.22')
+            .addLabel('settle',forward)
+            .to(scene, { scale: 1, opacity: 1, filter: 'blur(0px)', duration: .28, ease: 'power3.out' }, 'settle')
+            .to(veil, { opacity: 0, duration: .28, ease: 'power3.out' }, 'settle');
+        }
       }
     }
   }
@@ -3950,12 +4008,11 @@ const viewerClear=clearWorkspace;clearWorkspace=function(){++viewerAccountsReque
     };
   }
 
-  // The offline preview uses the same visual states with sample data.
   document.getElementById('loginTransitPreview')?.addEventListener('click', () =>
     transition(async () => {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      if (covered) await covered;
       setStage('workspace', '正在加载工作台');
-      await new Promise(resolve => setTimeout(resolve, 550));
+      await new Promise(resolve => setTimeout(resolve, 260));
       makeDemo(document.body.classList.contains('entry-admin') ? 'manager' : 'employee');
     })
   );
